@@ -1,0 +1,7 @@
+
+0. run admm on bluefrog and compare the result
+
+1. a small function to estimate the L2 constant
+
+2. key-map for dataset selection: [name, {m,n}]
+
