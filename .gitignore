@@ -5,5 +5,5 @@
 .DS_Store
 .vscode/
 __pycache__/
-example/data/
+examples/data/
 .code-workspace
