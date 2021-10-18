@@ -1,5 +1,5 @@
 #include <iostream>
-#include <cstdlib> 
+#include <cstdlib>
 #include <algorithm>
 #include <cassert>
 #include "mpi.h"
@@ -9,8 +9,8 @@ using namespace function::loss;
 using namespace utility;
 template <class value_t>
 data<value_t> getdata(const std::pair<std::string, std::array<size_t, 2> > &dataset,
-                      int &m, const int rank, const int nprocs, const MPI_Comm &COMM);
-static std::map<int, std::pair<std::string, std::array<size_t, 2> > > datasets{
+    int &m, const int rank, const int nprocs, const MPI_Comm &COMM);
+static std::map<int, std::pair<std::string, std::array<size_t, 2> > > datasets {
     {1, {"heart", {270, 13}}},
     {2, {"australian", {690, 14}}},
     {3, {"a8a", {22696, 123}}},
@@ -57,29 +57,28 @@ int main(int argc, char *argv[]){
 
     optimizer::lbfgs<double, stepsize::linesearch> subsolver(subsolver_params);
     logger::valfeas<double> logger;
-    terminator::combine<double> terminator(params.max_iters, 1E-10, 1E-10, 1E-10, 1E-10);
-    int n = dataloc.nfeatures();
+    terminator::combine<double> terminator(params.max_iters, 1E-10, 1E-10,
+        1E-10, 1E-10); int n = dataloc.nfeatures();
     std::vector<double> x(n, 1 / (double) n);
     MPI_Bcast(&x[0], x.size(), MPI_DOUBLE, 0, COMM);
 
     alg.initialize(x);
     alg.solve(subsolver, lossloc, logger, terminator, COMM, rank);
-    
     if (rank == 0) {
-        [[maybe_unused]] auto &[dataname, dims] = dataset;
-        logger.csv("examples/output/" + dataname + solver 
-                   + "_nprocs" + std::to_string(nprocs) 
-                   + "_rho" + std::to_string(params.rho) + ".csv");
+      [[maybe_unused]] auto &[dataname, dims] = dataset;
+      logger.csv("examples/output/" + dataname + solver
+          + "_nprocs" + std::to_string(nprocs)
+          + "_rho" + std::to_string(params.rho) + ".csv");
     }
-    
     MPI_Finalize();
     return 0;
 }
 
+// This function loads a data matrix stored in column-major order
+// and distributes the rows to nprocs MPI processes.
 template <class value_t>
-data<value_t> getdata(const std::pair<std::string, std::array<size_t, 2> > &dataset,
-                      int &m, const int rank,
-                      const int nprocs, const MPI_Comm &COMM) {
+data<value_t> getdata(const std::pair<std::string, std::array<size_t, 2> >
+    &dataset, int &m, const int rank, const int nprocs, const MPI_Comm &COMM) {
     using namespace utility;
     std::shared_ptr<const matrix::amatrix<value_t>> A;
     auto b = std::make_shared<const std::vector<value_t>>();
@@ -87,8 +86,8 @@ data<value_t> getdata(const std::pair<std::string, std::array<size_t, 2> > &data
     int n;
     if (rank == 0){
         const auto &[filename, dims] = dataset;
-        auto data = reader<value_t>::svm({"examples/data/" + filename}, dims[0], dims[1]);
-        m = data.nsamples();
+        auto data = reader<value_t>::svm({"examples/data/" + filename}, dims[0],
+            dims[1]); m = data.nsamples();
         n = data.nfeatures();
         A = data.matrix();
         b = data.labels();
@@ -114,7 +113,8 @@ data<value_t> getdata(const std::pair<std::string, std::array<size_t, 2> > &data
         MPI_Type_create_resized(sendtype, 0, mloc * sizeof(value_t), &sendtype);
         MPI_Type_commit(&sendtype);
 
-        MPI_Scatter(Aptr, 1, sendtype, &aloc[0], mloc * n, MPI_Type<value_t>(), 0, COMM);
+        MPI_Scatter(Aptr, 1, sendtype, &aloc[0], mloc * n, MPI_Type<value_t>(),
+            0, COMM);
 
         MPI_Type_free(&sendtype);
     } else {
@@ -125,13 +125,12 @@ data<value_t> getdata(const std::pair<std::string, std::array<size_t, 2> > &data
             offset[i] = sum;
             sum += countloc[i];
         }
-        assert(sum == m);
         mloc = countloc[rank];
         aloc = std::vector<value_t>(mloc * n);
         bloc = std::vector<value_t>(mloc);
 
-        MPI_Scatterv(b->data(), countloc.data(), offset.data(), MPI_Type<value_t>(),
-                    &bloc[0], mloc, MPI_Type<value_t>(), 0, COMM);
+        MPI_Scatterv(b->data(), countloc.data(), offset.data(),
+            MPI_Type<value_t>(), &bloc[0], mloc, MPI_Type<value_t>(), 0, COMM);
 
         MPI_Datatype sendtype, recvtype;
         MPI_Type_vector(n, 1, m, MPI_Type<value_t>(), &sendtype);
@@ -141,12 +140,14 @@ data<value_t> getdata(const std::pair<std::string, std::array<size_t, 2> > &data
         MPI_Type_create_resized(recvtype, 0, sizeof(value_t), &recvtype);
         MPI_Type_commit(&recvtype);
 
-        MPI_Scatterv(Aptr, countloc.data(), offset.data(), sendtype, &aloc[0], mloc, recvtype, 0, COMM);
+        MPI_Scatterv(Aptr, countloc.data(), offset.data(), sendtype, &aloc[0],
+            mloc, recvtype, 0, COMM);
 
         MPI_Type_free(&sendtype);
         MPI_Type_free(&recvtype);
     }
-    auto Aloc = std::make_shared<matrix::dmatrix<value_t>>(mloc, n, std::move(aloc));
+    auto Aloc = std::make_shared<matrix::dmatrix<value_t>>(mloc, n,
+        std::move(aloc));
     auto bloc_ = std::make_shared<const std::vector<value_t>>(std::move(bloc));
     return data<value_t>(Aloc, bloc_);
 }
