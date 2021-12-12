@@ -10,14 +10,14 @@ Apart from a compiler that supports C++17 features, we also have the following r
 # Problem
 
 We consider optimization on the form:
-$$
+\begin{equation}
 \underset{x\in \mathbb{R}^n }{\text{minimize}} \quad 
     F(x) = \sum_{i=1}^{m}f_i(x) + g(x) \quad 
  \text{subject to}  \quad x\in S.
-$$
+\end{equation}
 where $f_i(x)$ models the individual loss of agent $i$, g(x) is a regulerizer, and the linear subspace $S$ represents coupling constraints between agents. The component functions $f_i(x)$ and the decision vector are distributed among the $m$  agents.
 
-# Example: Logistic Regression
+## Example: Logistic Regression
 
 The following listing shows how to use the solver function in `pomodoro` to solve a logistic regression problem on the `real-sim` dataset that contains 72309 samples and 20958 features. We use L-BFGS as the subproblem solver. More examples can be found in the `examples/` directory.
 
