@@ -10,11 +10,12 @@ Apart from a compiler that supports C++17 features, we also have the following r
 # Problem
 
 We consider optimization on the form:
-$$
-{\text{minimize}}_x \quad 
+<!-- $$
+\underset{x\in \mathbb{R}^n }{\text{minimize}} \quad 
     F(x) = \sum_{i=1}^{m}f_i(x) + g(x) \quad 
  \text{subject to}  \quad x\in S,
-$$
+$$ -->
+![Alt text](/examples/figures/equation.png?raw=true "Optional Title")
 where $f_i(x)$ models the individual loss of agent $i$, g(x) is a regulerizer, and the linear subspace $S$ represents coupling constraints between agents. The component functions $f_i(x)$ and the decision vector are distributed among the $m$  agents.
 
 ## Example: Logistic Regression
